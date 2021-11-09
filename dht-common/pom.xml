@@ -17,11 +17,18 @@
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
             <optional>true</optional>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>net.sourceforge.cpdetector</groupId>-->
+<!--            <artifactId>cpdetector</artifactId>-->
+<!--            <version>1.0.8</version>-->
+<!--        </dependency>-->
+        <!--GetByteEncode-->
         <dependency>
-            <groupId>net.sourceforge.cpdetector</groupId>
-            <artifactId>cpdetector</artifactId>
-            <version>1.0.7</version>
+            <groupId>com.googlecode.juniversalchardet</groupId>
+            <artifactId>juniversalchardet</artifactId>
+            <version>1.0.3</version>
         </dependency>
+
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>

@@ -20,14 +20,14 @@ spring:
   redis:
     host: 127.0.0.1
     port: 6379
+    password:
+    database: 1
     jedis:
       pool:
         max-idle: 8
         min-idle: 1
         max-active: 8
         max-wait: -1ms
-    password:
-    database: 1
   application:
     name: dht-web
 

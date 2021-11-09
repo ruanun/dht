@@ -6,8 +6,8 @@ spring:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/dht?useUnicode=true&characterEncoding=UTF-8&useSSL=false&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&serverTimezone=GMT%2B8
-    username: dht
-    password:
+    username: root
+    password: 123456
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
@@ -16,6 +16,8 @@ spring:
       connection-init-sql: SELECT 1
   redis:
     host: 127.0.0.1
+    password: 123456
+    database: 14
     port: 6379
     jedis:
       pool:
@@ -23,8 +25,9 @@ spring:
         min-idle: 0
         max-active: 8
         max-wait: -1ms
-    password:
     timeout: 50000
+  profiles:
+    active: dev
 
 logging:
   level:

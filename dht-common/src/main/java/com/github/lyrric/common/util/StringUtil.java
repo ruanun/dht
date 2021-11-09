@@ -3,10 +3,11 @@ package com.github.lyrric.common.util;
 import com.github.lyrric.common.entity.Node;
 import com.github.lyrric.common.entity.TorrentInfo;
 import com.github.lyrric.common.entity.Tree;
-import info.monitorenter.cpdetector.io.*;
+import org.mozilla.universalchardet.UniversalDetector;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
@@ -15,15 +16,15 @@ import java.util.List;
  * Created by Administrator on 2016/3/14.
  */
 public class StringUtil {
-
-	public static CodepageDetectorProxy detector = CodepageDetectorProxy.getInstance();
-
-	static {
-		detector.add(new ParsingDetector(false));
-		detector.add(JChardetFacade.getInstance());
-		detector.add(ASCIIDetector.getInstance());
-		detector.add(UnicodeDetector.getInstance());
-	}
+//
+//	public static CodepageDetectorProxy detector = CodepageDetectorProxy.getInstance();
+//
+//	static {
+//		detector.add(new ParsingDetector(false));
+//		detector.add(JChardetFacade.getInstance());
+//		detector.add(ASCIIDetector.getInstance());
+//		detector.add(UnicodeDetector.getInstance());
+//	}
 
 	public static String getMiddleString(String text, String lStr, String rStr) {
 		String result = "";
@@ -139,12 +140,12 @@ public class StringUtil {
 		}
 		return str.toString();
 	}
-	
+
 	///清除html格式
 	public static String delTagsFContent(String content){
         return content.replaceAll("</?[^/?(br)|(p)|(div)][^><]*>","");
-	} 
-	
+	}
+
 	public static String formatSize(double size) {
 
 		int rank = 0;
@@ -170,21 +171,42 @@ public class StringUtil {
 		return new DecimalFormat("0.##").format(size) + " " + rankchar;
 	}
 
+//	/**
+//	 * 获取 byte[] 编码类型
+//	 *
+//	 * @param bytes bytes数组
+//	 * @return      编码类型
+//	 */
+//	public static String getEncoding(byte[] bytes) {
+//		String defaultEncoding = "UTF-8";
+//		try(ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
+//			java.nio.charset.Charset charset = detector.detectCodepage(in, bytes.length);
+//			defaultEncoding = charset.name();
+//			StandardCharsets.UTF_8.name()
+//		} catch (IOException e) {
+//		}
+//		return defaultEncoding;
+//	}
+
 	/**
-	 * 获取 byte[] 编码类型
+	 * 获取文件编码类型
 	 *
-	 * @param bytes bytes数组
+	 * @param bytes 文件bytes数组
 	 * @return      编码类型
 	 */
 	public static String getEncoding(byte[] bytes) {
 		String defaultEncoding = "UTF-8";
-		try(ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
-			java.nio.charset.Charset charset = detector.detectCodepage(in, bytes.length);
-			defaultEncoding = charset.name();
-		} catch (IOException e) {
+		UniversalDetector detector = new UniversalDetector(null);
+		detector.handleData(bytes, 0, bytes.length);
+		detector.dataEnd();
+		String encoding = detector.getDetectedCharset();
+		detector.reset();
+		if (encoding == null) {
+			encoding = defaultEncoding;
 		}
-		return defaultEncoding;
+		return encoding;
 	}
+
 
 	/**
 	* 获取子文件列表
