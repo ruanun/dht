@@ -1,16 +1,11 @@
 package com.github.lyrric.server.netty.handler;
 
-import com.github.lyrric.common.constant.MethodEnum;
-import com.github.lyrric.common.constant.RedisConstant;
-import com.github.lyrric.common.entity.DownloadMsgInfo;
 import com.github.lyrric.common.util.ByteUtil;
 import com.github.lyrric.common.util.MessageIdUtil;
 import com.github.lyrric.common.util.NetworkUtil;
 import com.github.lyrric.common.util.NodeIdUtil;
 import com.github.lyrric.server.model.Node;
-import com.github.lyrric.server.model.RequestMessage;
 import com.github.lyrric.server.netty.DHTServer;
-import com.github.lyrric.server.util.RouteTable;
 import io.netty.channel.socket.DatagramPacket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,9 +17,7 @@ import javax.annotation.Resource;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -43,13 +36,13 @@ public class ResponseHandler {
 
     private AtomicInteger response = new AtomicInteger(0);
 
-    public void hand(Map<String, ?> map, InetSocketAddress sender){
+    public void hand(Map<String, ?> map, InetSocketAddress sender) {
         //消息 id
-         byte[] id = (byte[]) map.get("t");
+        byte[] id = (byte[]) map.get("t");
         @SuppressWarnings("unchecked")
         Map<String, ?> r = (Map<String, ?>) map.get("r");
         response.incrementAndGet();
-        if((response.get() % 100000) == 0){
+        if ((response.get() % 100000) == 0) {
             log.info("on response count:{}", response.get());
         }
         resolveNodes(r);
@@ -62,10 +55,10 @@ public class ResponseHandler {
      */
     private void resolveNodes(Map<String, ?> r) {
         byte[] nodes = (byte[]) r.get("nodes");
-        if (nodes == null){
-            return ;
+        if (nodes == null) {
+            return;
         }
-        if(DHTServerHandler.NODES_QUEUE.size() > 50000){
+        if (DHTServerHandler.NODES_QUEUE.size() > 50000) {
             return;
         }
         for (int i = 0; i < nodes.length; i += 26) {
@@ -81,6 +74,7 @@ public class ResponseHandler {
             }
         }
     }
+
     /**
      * 加入 DHT 网络
      */
@@ -102,11 +96,12 @@ public class ResponseHandler {
         HashMap<String, Object> map = new HashMap<>();
         map.put("target", target);
         if (nid != null) {
-            map.put("id",  NodeIdUtil.makeSelfId(NetworkUtil.SELF_NODE_ID, target));
+            map.put("id", NodeIdUtil.makeSelfId(NetworkUtil.SELF_NODE_ID, target));
         }
         DatagramPacket packet = NetworkUtil.createPacket(ByteUtil.intToByteArray(MessageIdUtil.generatorIntId()), "q", "find_node", map, address);
         dhtServer.sendKRPCWithLimit(packet);
     }
+
     /**
      * 查询 DHT 节点线程，用于持续获取新的 DHT 节点
      *
@@ -124,6 +119,7 @@ public class ResponseHandler {
         }
 
     });
+
     @PostConstruct
     public void init() {
         findNodeTask.start();

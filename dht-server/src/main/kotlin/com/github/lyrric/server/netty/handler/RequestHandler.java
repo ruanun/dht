@@ -1,14 +1,11 @@
 package com.github.lyrric.server.netty.handler;
 
-import com.github.lyrric.common.constant.MethodEnum;
 import com.github.lyrric.common.constant.RedisConstant;
 import com.github.lyrric.common.entity.DownloadMsgInfo;
-import com.github.lyrric.common.util.MessageIdUtil;
 import com.github.lyrric.common.util.NetworkUtil;
 import com.github.lyrric.common.util.NodeIdUtil;
 import com.github.lyrric.server.mapper.InfoHashListMapper;
 import com.github.lyrric.server.model.Node;
-import com.github.lyrric.server.model.RequestMessage;
 import com.github.lyrric.server.netty.DHTServer;
 import com.github.lyrric.server.util.RouteTable;
 import io.netty.channel.socket.DatagramPacket;
@@ -19,10 +16,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.math.BigInteger;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -53,14 +48,15 @@ public class RequestHandler {
     private AtomicInteger hashCount = new AtomicInteger(0);
     @Resource
     private RouteTable routeTable;
+
     /**
      * 解析查询请求
      *
      * @param map
      * @param sender
      */
-    public void hand(Map<String, ?> map, InetSocketAddress sender){
-         //transaction id 会话ID
+    public void hand(Map<String, ?> map, InetSocketAddress sender) {
+        //transaction id 会话ID
         byte[] t = (byte[]) map.get("t");
 
         String q = new String((byte[]) map.get("q"));
@@ -70,28 +66,28 @@ public class RequestHandler {
             case "ping":
                 responsePing(t, (byte[]) a.get("id"), sender);
                 pingNum.incrementAndGet();
-                if((pingNum.get() % 10000) == 0){
+                if ((pingNum.get() % 10000) == 0) {
                     log.info("on request ping count:{}", pingNum.get());
                 }
                 break;
             case "find_node":
                 responseFindNode(t, (byte[]) a.get("id"), sender);
                 findNodeNum.incrementAndGet();
-                if((findNodeNum.get() % 10000) == 0){
+                if ((findNodeNum.get() % 10000) == 0) {
                     log.info("on request find node count:{}", findNodeNum.get());
                 }
                 break;
             case "get_peers":
                 responseGetPeers(t, (byte[]) a.get("info_hash"), sender);
                 findPeerNum.incrementAndGet();
-                if((findPeerNum.get() % 10000) == 0){
+                if ((findPeerNum.get() % 10000) == 0) {
                     log.info("on request get peer count:{}", findPeerNum.get());
                 }
                 break;
             case "announce_peer":
                 responseAnnouncePeer(t, a, sender);
                 announceNum.incrementAndGet();
-                if((announceNum.get() % 1000) == 0){
+                if ((announceNum.get() % 1000) == 0) {
                     log.info("on request announce count:{}", announceNum.get());
                 }
                 break;
@@ -99,17 +95,18 @@ public class RequestHandler {
         }
     }
 
-    private void saveNode(Map<String, ?> a, InetSocketAddress sender){
-        if(DHTServerHandler.NODES_QUEUE.size() > 50000){
+    private void saveNode(Map<String, ?> a, InetSocketAddress sender) {
+        if (DHTServerHandler.NODES_QUEUE.size() > 50000) {
             return;
         }
         Boolean success;
-        if((success = redisTemplate.opsForValue().setIfAbsent(RedisConstant.KEY_NODE_IP+sender.getHostName(), System.currentTimeMillis(),3, TimeUnit.HOURS)) != null && success){
+        if ((success = redisTemplate.opsForValue().setIfAbsent(RedisConstant.KEY_NODE_IP + sender.getHostName(), System.currentTimeMillis(), 3, TimeUnit.HOURS)) != null && success) {
             byte[] nid = (byte[]) a.get("id");
             Node node = new Node(nid, sender);
             DHTServerHandler.NODES_QUEUE.offer(node);
         }
     }
+
     /**
      * 回复 ping 请求
      * Response = {"t":"aa", "y":"r", "r": {"id":"自身节点ID"}}
@@ -117,7 +114,7 @@ public class RequestHandler {
      * @param t
      * @param sender
      */
-    private void responsePing(byte[] t, byte[]nid, InetSocketAddress sender) {
+    private void responsePing(byte[] t, byte[] nid, InetSocketAddress sender) {
         Map r = new HashMap<String, Object>();
         r.put("id", NodeIdUtil.getNeighbor(NetworkUtil.SELF_NODE_ID, nid));
         DatagramPacket packet = NetworkUtil.createPacket(t, "r", null, r, sender);
@@ -147,12 +144,12 @@ public class RequestHandler {
      * @param sender
      */
     private void responseGetPeers(byte[] t, byte[] info_hash, InetSocketAddress sender) {
-        if(info_hash == null){
+        if (info_hash == null) {
             return;
         }
         String hashStr = new BigInteger(info_hash).toString(16);
-        if(infoHashListMapper.selectCountByHash(hashStr) > 0){
-            return ;
+        if (infoHashListMapper.selectCountByHash(hashStr) > 0) {
+            return;
         }
         HashMap<String, Object> r = new HashMap<>();
         r.put("token", new byte[]{info_hash[0], info_hash[1]});
@@ -167,6 +164,7 @@ public class RequestHandler {
     /**
      * 回复 announce_peer 请求，该请求中包含了对方正在下载的 torrent 的 info_hash 以及 端口号
      * Response = {"t":"aa", "y":"r", "r": {"id":"mnopqrstuvwxyz123456"}}
+     *
      * @param t
      * @param a      请求参数 a：
      *               {
@@ -182,16 +180,16 @@ public class RequestHandler {
         try {
             byte[] infoHash = (byte[]) a.get("info_hash");
             byte[] token = (byte[]) a.get("token");
-            String hashStr = new BigInteger(1,infoHash).toString(16);
+            String hashStr = new BigInteger(1, infoHash).toString(16);
 
-            if(infoHashListMapper.selectCountByHash(hashStr) > 0){
-                return ;
+            if (infoHashListMapper.selectCountByHash(hashStr) > 0) {
+                return;
             }
             try {
                 infoHashListMapper.insert(hashStr);
-            }catch (Exception e){
+            } catch (Exception e) {
                 //hash冲突报错，不打印日志
-                if(!(e instanceof DuplicateKeyException)){
+                if (!(e instanceof DuplicateKeyException)) {
                     e.printStackTrace();
                 }
             }
@@ -217,11 +215,11 @@ public class RequestHandler {
             dhtServer.sendKRPCWithLimit(packet);
 
             hashCount.incrementAndGet();
-            if(hashCount.get() % 1000 == 0){
+            if (hashCount.get() % 1000 == 0) {
                 log.info("info hash count:{}", hashCount.get());
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

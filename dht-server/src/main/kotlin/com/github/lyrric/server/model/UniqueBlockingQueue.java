@@ -16,26 +16,26 @@ import java.util.concurrent.LinkedBlockingQueue;
 @Slf4j
 public class UniqueBlockingQueue {
 
-	private Set<String> ips = new HashSet<>();
-	private BlockingQueue<Node> nodes = new LinkedBlockingQueue<>();
+    private Set<String> ips = new HashSet<>();
+    private BlockingQueue<Node> nodes = new LinkedBlockingQueue<>();
 
-	public int size() {
-		return ips.size();
-	}
+    public int size() {
+        return ips.size();
+    }
 
-	public boolean isEmpty() {
-		return nodes.isEmpty();
-	}
+    public boolean isEmpty() {
+        return nodes.isEmpty();
+    }
 
-	public boolean offer(Node node) {
-		if (ips.add(node.getAddr().getHostString()))
-			return nodes.offer(node);
-		return false;
-	}
+    public boolean offer(Node node) {
+        if (ips.add(node.getAddr().getHostString()))
+            return nodes.offer(node);
+        return false;
+    }
 
-	public Node take() throws InterruptedException {
-		Node node = nodes.take();
-		ips.remove(node.getAddr().getHostString());
-		return node;
-	}
+    public Node take() throws InterruptedException {
+        Node node = nodes.take();
+        ips.remove(node.getAddr().getHostString());
+        return node;
+    }
 }

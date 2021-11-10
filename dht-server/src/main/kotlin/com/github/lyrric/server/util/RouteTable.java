@@ -4,13 +4,16 @@ import com.github.lyrric.server.model.Node;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Created on 2020-02-27.
  * 假的
+ *
  * @author wangxiaodong
  */
 @Slf4j
@@ -25,33 +28,34 @@ public class RouteTable {
 
     private ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    private long lastTime = System.currentTimeMillis()/1000;
+    private long lastTime = System.currentTimeMillis() / 1000;
 
     /**
      * 每秒新增一个
+     *
      * @param node
      */
-    public void add(Node node){
-        if(lock.writeLock().tryLock()){
-            if(exist(node)){
-                return ;
+    public void add(Node node) {
+        if (lock.writeLock().tryLock()) {
+            if (exist(node)) {
+                return;
             }
             try {
-                if(nodes.size() <= MAX_SIZE){
+                if (nodes.size() <= MAX_SIZE) {
                     nodes.add(node);
                     log.info("add node {}", node.getAddr());
                     return;
                 }
-                long time = System.currentTimeMillis()/1000;
-                if(time == lastTime){
+                long time = System.currentTimeMillis() / 1000;
+                if (time == lastTime) {
                     return;
                 }
                 lastTime = time;
                 nodes.add(node);
                 nodes.remove(0);
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 lock.writeLock().unlock();
             }
         }
@@ -59,14 +63,15 @@ public class RouteTable {
 
     /**
      * 获取所有节点
+     *
      * @return
      */
-    public List<Node> getAll(){
+    public List<Node> getAll() {
         return new ArrayList<>(nodes);
     }
 
-    private boolean exist(Node node){
-        return nodes.stream().anyMatch(t->t.getAddr().getHostString().equals(node.getAddr().getHostString()));
+    private boolean exist(Node node) {
+        return nodes.stream().anyMatch(t -> t.getAddr().getHostString().equals(node.getAddr().getHostString()));
     }
 
 }
